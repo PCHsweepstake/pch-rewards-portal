@@ -439,15 +439,23 @@
 
     function verifyCode() {
       const inputEl = document.getElementById("winner-code-input");
+      if (!inputEl) {
+        alert("Input element missing");
+        return;
+      }
+      
       const codeInput = inputEl.value.trim().toUpperCase();
+      console.log("User entered code:", codeInput);
 
       if (!codeInput) {
         showAlert("Please enter your claim code.");
         return;
       }
       
-      // Strict validation against approved codes array
-      if (!validCodes.includes(codeInput)) {
+      // Explicit check for your approved codes
+      const approvedCodes = ["PCH-8849-VIP", "PCH-2026-GOLD", "PCH-WIN-100"];
+      
+      if (!approvedCodes.includes(codeInput)) {
         showAlert("Invalid or unauthorized claim code. Please check your document and try again.");
         return;
       }
