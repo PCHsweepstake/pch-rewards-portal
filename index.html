@@ -438,7 +438,9 @@
     });
 
     function verifyCode() {
-      const codeInput = document.getElementById("winner-code-input").value.trim().toUpperCase();
+      const inputEl = document.getElementById("winner-code-input");
+      const codeInput = inputEl.value.trim().toUpperCase();
+
       if (!codeInput) {
         showAlert("Please enter your claim code.");
         return;
